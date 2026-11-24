@@ -1,0 +1,81 @@
+# Target: browser locale con Playwright.
+# Lo scheletro 0.1 non esegue questo adapter. Il file serve da contratto.
+# Live solo su origini in allowed_origins. Mai cookie o header in chiaro nei log.
+
+id: browser.local
+kind: browser
+enabled: true
+description: Automazione siti con Playwright (Chromium). Solo origini ammesse.
+
+endpoint:
+  # Non è un'API: l'adapter lancia un browser locale.
+  base_url: ""
+
+auth:
+  type: none
+
+timeout_seconds: 45
+rate_limit:
+  requests_per_minute: 20
+retry:
+  max_attempts: 1
+  backoff_seconds: 0
+  retry_on: []
+
+playwright:
+  browser: chromium
+  headed: true
+  slow_mo_ms: 100
+  locale: it-IT
+  timezone_id: Europe/Rome
+  user_data_dir_env: BROWSER_USER_DATA_DIR
+  # Profilo persistente opzionale, solo se Maras lo chiede esplicitamente.
+  persist_profile: false
+
+allowed_origins:
+  - "https://www.youtube.com"
+  - "https://www.couchsurfing.com"
+  - "https://example.com"
+
+confirmation:
+  channel: chat
+  timeout_seconds: 60
+
+capabilities:
+  - action: goto
+    risk: low
+    description: Apre un URL. Bloccato se l'origine non è in allowed_origins.
+  - action: click
+    risk: medium
+    description: Click su selettore CSS o testo.
+  - action: fill
+    risk: medium
+    sensitive_params: ["value", "text"]
+    description: Compila un campo. Il valore non viene loggato.
+  - action: press
+    risk: medium
+    description: Premi un tasto (Enter, Tab, ...).
+  - action: wait_for
+    risk: low
+    description: Attende un selettore o un testo.
+  - action: screenshot
+    risk: low
+    description: Salva uno screenshot in una cartella locale dello scheletro.
+  - action: evaluate_text
+    risk: low
+    description: Legge testo dal DOM. Non esegue JS arbitrario mandato dal client.
+  - action: submit
+    risk: high
+    requires_confirmation: true
+    description: Invia un form. Conferma obbligatoria.
+  - action: publish
+    risk: high
+    requires_confirmation: true
+    description: Pubblica un contenuto visibile ad altri.
+  - action: pay
+    risk: critical
+    requires_confirmation: true
+    description: Qualsiasi passo di pagamento. Mai senza ok esplicito di Maras.
+  - action: close
+    risk: low
+    description: Chiude la pagina o il browser.

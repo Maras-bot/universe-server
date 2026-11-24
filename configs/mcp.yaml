@@ -1,0 +1,65 @@
+# Target MCP generico (connettori già disponibili nell'ambiente di Maras,
+# es. Notion, Gmail, GitHub, Google Calendar, Zapier).
+# Lo scheletro 0.1 non apre sessioni MCP. Il file definisce la lista bianca.
+# Universe deve esporre solo i tool ammessi, mai l'intero catalogo di un server.
+
+id: mcp.generic
+kind: mcp
+enabled: true
+description: Ponte verso server MCP già autenticati. Solo tool in lista bianca.
+
+endpoint:
+  # Esempio: comando stdio oppure URL HTTP MCP. Nessun segreto qui.
+  transport: stdio
+  command_env: MCP_COMMAND
+  url_env: MCP_URL
+
+auth:
+  type: none
+  # L'auth verso il server MCP resta nel processo host (Cursor / bot), non in YAML.
+
+timeout_seconds: 30
+rate_limit:
+  requests_per_minute: 40
+retry:
+  max_attempts: 2
+  backoff_seconds: 1.0
+  retry_on: ["timeout"]
+
+confirmation:
+  channel: chat
+  timeout_seconds: 60
+
+mcp:
+  # Namespace o server ammessi (nomi di esempio, da adattare).
+  allowed_servers:
+    - user-Notion
+    - user-Gmail
+    - user-Google-calendar
+    - user-Zapier-xai
+    - user-GitHub-xai
+  # Tool esplicitamente vietati, anche se il server li offre.
+  deny_tools:
+    - send_email
+    - create_posts
+    - delete_page
+    - trash_file
+    - delete_event
+
+actions:
+  call_tool:
+    risk: medium
+    description: Invoca un tool MCP in lista bianca. Il nome sta in params.tool.
+    sensitive_params: ["arguments"]
+  list_tools:
+    risk: low
+    description: Elenca i tool ammessi, non l'intero catalogo grezzo del server.
+
+capabilities:
+  - action: list_tools
+    risk: low
+    description: Elenco tool ammessi.
+  - action: call_tool
+    risk: medium
+    sensitive_params: ["arguments"]
+    description: Chiama un tool MCP in lista bianca. send/pay/publish/delete alzano il rischio da soli.

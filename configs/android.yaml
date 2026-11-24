@@ -1,0 +1,159 @@
+# Target: telefono di Maras via Phone Control (già esistente).
+# Relay: /workspace/phone-control/relay/relay.py
+#   - il telefono apre ws://HOST:8080/phone (fuori casa: wss://)
+#   - i comandi arrivano con POST /command e header Authorization: Bearer $RELAY_TOKEN
+# Il token NON sta in questo file. Solo il nome della variabile.
+#
+# Il Guard sul telefono resta attivo: app protette e eSIM chiedono
+# Conferma/Rifiuta anche dopo il via di Universe.
+
+id: android.phone
+kind: android
+enabled: true
+description: Telefono di Maras tramite Phone Control relay (AccessibilityService).
+
+endpoint:
+  base_url: "${RELAY_URL}"
+  command_path: /command
+  health_path: /health
+  # Il telefono si collega da solo a /phone. Universe non apre quella WebSocket.
+
+auth:
+  type: bearer
+  token_env: RELAY_TOKEN
+
+timeout_seconds: 35
+rate_limit:
+  requests_per_minute: 30
+retry:
+  max_attempts: 2
+  backoff_seconds: 1.0
+  retry_on: ["timeout", "503"]
+
+confirmation:
+  # Universe ferma high/critical PRIMA del relay.
+  # Canale preferito: notifica Phone Control (quando esisterà confirm_prompt).
+  # Nel frattempo: conferma in chat (POST /confirm/{id}), poi rinvio del comando.
+  channel: chat
+  also_honor_device_guard: true
+  timeout_seconds: 60
+
+# Stessa lista di Guard.kt — aprire o agire su queste app è almeno high.
+protected_packages:
+  - com.kraken.trade
+  - com.kraken.invest
+  - com.paypal.android.p2pmobile
+  - com.google.android.gm
+  - com.android.vending
+  - com.android.settings
+  - com.google.android.euicc
+  - com.samsung.euicc
+  - com.samsung.android.app.telephonyui
+  - com.google.android.apps.nbu.paisa.user
+  - it.copernico.bancaposta
+  - com.ntv.banking
+
+capabilities:
+  - action: tap
+    risk: medium
+    description: Tocco alle coordinate x, y.
+  - action: long_press
+    risk: medium
+    description: Pressione prolungata.
+  - action: swipe
+    risk: medium
+    description: Swipe da (x1,y1) a (x2,y2).
+  - action: open_app
+    risk: medium
+    description: Apre un'app per package. Se il package è protetto, rischio high e conferma.
+  - action: type
+    risk: medium
+    sensitive_params: ["text"]
+    description: Digita testo. Il testo non finisce nei log.
+  - action: click_text
+    risk: medium
+    description: Tocca un elemento dal testo visibile.
+  - action: dump_screen
+    risk: low
+    description: Albero UI della finestra attiva. Solo lettura.
+  - action: back
+    risk: medium
+    description: Tasto Indietro.
+  - action: home
+    risk: medium
+    description: Tasto Home.
+  - action: recents
+    risk: medium
+    description: App recenti.
+  - action: wait_for_text
+    risk: low
+    description: Attende che una scritta compaia o sparisca.
+  - action: esim_start
+    risk: critical
+    requires_confirmation: true
+    sensitive_params: ["activation_code", "confirmation_code", "qr_image_base64"]
+    description: Avvia il flusso eSIM. Mai automatico. Il telefono si ferma prima del tasto finale.
+  - action: esim_status
+    risk: low
+    description: Stato del flusso eSIM.
+  - action: esim_cancel
+    risk: medium
+    description: Annulla il flusso eSIM in corso.
+  - action: esim_learn
+    risk: high
+    requires_confirmation: true
+    description: Registra a mano il percorso eSIM. Conferma anche sul telefono.
+  - action: record_start
+    risk: medium
+    description: Inizia a registrare un percorso.
+  - action: record_stop
+    risk: medium
+    description: Ferma e salva il percorso. I testi digitati non vengono salvati.
+  - action: record_status
+    risk: low
+    description: Stato della registrazione.
+  - action: routes_list
+    risk: low
+    description: Elenca i percorsi salvati.
+  - action: route_replay
+    risk: high
+    requires_confirmation: true
+    sensitive_params: ["params"]
+    description: Ripete un percorso. I parametri possono contenere testi da inserire.
+  - action: route_status
+    risk: low
+    description: Stato della riproduzione.
+  - action: route_cancel
+    risk: medium
+    description: Interrompe la riproduzione.
+  - action: route_delete
+    risk: high
+    requires_confirmation: true
+    description: Cancella un percorso salvato.
+  - action: route_export
+    risk: low
+    description: Esporta un percorso redatto (niente valori, niente coordinate).
+  - action: youtube_open
+    risk: medium
+    description: Apre YouTube.
+  - action: youtube_search
+    risk: medium
+    description: Cerca un video.
+  - action: youtube_play
+    risk: medium
+    description: Riproduce un risultato. Mai mi piace, iscriviti, acquisti.
+  - action: youtube_pause
+    risk: low
+    description: Mette in pausa.
+  - action: youtube_resume
+    risk: low
+    description: Riprende la riproduzione.
+  - action: youtube_toggle
+    risk: low
+    description: Alterna pausa/play.
+  - action: youtube_skip_ad
+    risk: low
+    description: Tocca solo "Salta annuncio", se c'è.
+  - action: youtube_status
+    risk: low
+    description: Legge lo stato del player, senza toccare.
