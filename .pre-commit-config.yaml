@@ -1,0 +1,18 @@
+# Opzionale: chi usa il framework pre-commit può installare gli stessi controlli.
+# I hook nativi in .githooks/ restano il percorso predefinito:
+#   git config core.hooksPath .githooks
+repos:
+  - repo: local
+    hooks:
+      - id: universe-secret-scan
+        name: universe secret scan (staged)
+        entry: python3 scripts/secret_scan.py --staged
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: universe-secret-scan-push
+        name: universe secret scan (push)
+        entry: python3 scripts/secret_scan.py --pre-push
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
