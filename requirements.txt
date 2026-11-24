@@ -1,0 +1,9 @@
+pydantic>=2
+pydantic-settings>=2
+pyyaml
+fastapi
+httpx
+uvicorn[standard]
+websockets
+pytest
+pytest-asyncio

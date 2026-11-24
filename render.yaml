@@ -1,0 +1,40 @@
+# Blueprint Render per Universe. I token NON stanno in questo file:
+# vanno impostati come variabili del servizio (UNIVERSE_BOT_TOKENS, UNIVERSE_PHONE_TOKEN).
+#
+# Render Free: l'istanza va in sleep dopo 15 minuti senza traffico in ingresso
+# (HTTP o messaggi WebSocket). Il telefono deve inviare {"type":"ping"}
+# almeno ogni 5 minuti per tenersi sveglia la connessione e l'istanza.
+services:
+  - type: web
+    name: universe-server
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: UNIVERSE_DRY_RUN
+        value: "1"
+      - key: UNIVERSE_ENABLE_DOCS
+        value: "0"
+      - key: UNIVERSE_REQUIRE_TLS
+        value: "1"
+      - key: UNIVERSE_ALLOW_LIVE
+        value: "false"
+      - key: UNIVERSE_MAX_REQUEST_BYTES
+        value: "65536"
+      - key: UNIVERSE_HTTP_RATE_LIMIT_PER_MINUTE
+        value: "60"
+      - key: UNIVERSE_HTTP_RATE_LIMIT_UNAUTH_PER_MINUTE
+        value: "20"
+      - key: UNIVERSE_CONFIGS_DIR
+        value: configs
+      - key: UNIVERSE_AUDIT_PATH
+        value: logs/audit.jsonl
+      - key: UNIVERSE_BOT_TOKENS
+        sync: false
+      - key: UNIVERSE_PHONE_TOKEN
+        sync: false

@@ -1,0 +1,26 @@
+[project]
+name = "universe"
+version = "0.2.0"
+description = "Connessione Universale — layer centrale di instradamento comandi"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2",
+  "pydantic-settings>=2",
+  "pyyaml",
+  "fastapi",
+  "httpx",
+  "uvicorn[standard]",
+  "websockets",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
