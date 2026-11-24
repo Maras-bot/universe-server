@@ -1,0 +1,6 @@
+#!/bin/sh
+# Blocca il commit se i file in stage contengono token o segreti.
+set -e
+repo=$(git rev-parse --show-toplevel)
+cd "$repo"
+exec python3 scripts/secret_scan.py --staged
