@@ -1,0 +1,102 @@
+# Target REST generico di esempio. Nessun host reale è chiamato in dry-run.
+# Sostituisci base_url e le azioni quando colleghi un'API vera.
+# I segreti stanno in REST_BASE_URL e REST_API_TOKEN, non qui.
+
+id: rest.generic
+kind: rest_api
+enabled: true
+description: Adapter HTTP generico (GET/POST/PATCH/DELETE) con auth da env.
+
+endpoint:
+  base_url: "${REST_BASE_URL}"
+
+auth:
+  type: bearer
+  token_env: REST_API_TOKEN
+
+timeout_seconds: 20
+rate_limit:
+  requests_per_minute: 60
+retry:
+  max_attempts: 3
+  backoff_seconds: 1.0
+  retry_on: ["timeout", "503", "429"]
+
+confirmation:
+  channel: chat
+  timeout_seconds: 60
+
+# Azioni nominali. I path possono usare parametri, es. {id}.
+actions:
+  get_status:
+    method: GET
+    path: /status
+    risk: low
+    description: Health/status dell'API.
+  list_items:
+    method: GET
+    path: /items
+    risk: low
+    query_from: ["page", "q"]
+    description: Elenco risorse.
+  get_item:
+    method: GET
+    path: /items/{id}
+    risk: low
+    path_params: ["id"]
+    description: Dettaglio di una risorsa.
+  create_item:
+    method: POST
+    path: /items
+    risk: medium
+    body_from_params: true
+    sensitive_params: ["token", "secret"]
+    description: Crea una risorsa. Non è un pagamento.
+  update_item:
+    method: PATCH
+    path: /items/{id}
+    risk: medium
+    path_params: ["id"]
+    body_from_params: true
+    description: Aggiorna una risorsa.
+  delete_item:
+    method: DELETE
+    path: /items/{id}
+    risk: high
+    requires_confirmation: true
+    path_params: ["id"]
+    description: Cancella una risorsa. Conferma obbligatoria.
+  pay:
+    method: POST
+    path: /payments
+    risk: critical
+    requires_confirmation: true
+    body_from_params: true
+    sensitive_params: ["iban", "card", "amount", "account"]
+    description: Pagamento. Universe rifiuta senza conferma esplicita di Maras.
+
+capabilities:
+  - action: get_status
+    risk: low
+    description: Health/status dell'API.
+  - action: list_items
+    risk: low
+    description: Elenco risorse.
+  - action: get_item
+    risk: low
+    description: Dettaglio di una risorsa.
+  - action: create_item
+    risk: medium
+    description: Crea una risorsa.
+  - action: update_item
+    risk: medium
+    description: Aggiorna una risorsa.
+  - action: delete_item
+    risk: high
+    requires_confirmation: true
+    description: Cancella una risorsa.
+  - action: pay
+    risk: critical
+    requires_confirmation: true
+    sensitive_params: ["iban", "card", "amount", "account"]
+    description: Pagamento. Mai senza conferma esplicita.

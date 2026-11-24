@@ -1,0 +1,77 @@
+# Target Zapier (webhook e, in seguito, MCP Zapier già collegato).
+# Lo scheletro 0.1 non esegue questo adapter. Il file è il contratto.
+# L'URL del webhook sta in ZAPIER_WEBHOOK_URL, mai in chiaro qui.
+# I trigger in ingresso (Zap -> Universe) usano un segreto condiviso.
+
+id: zapier.main
+kind: zapier
+enabled: true
+description: Uscita verso Zapier via webhook. Ingresso opzionale con segreto condiviso.
+
+endpoint:
+  base_url: "${ZAPIER_WEBHOOK_URL}"
+  inbound_path: /hooks/zapier
+
+auth:
+  type: header
+  header_name: X-Api-Key
+  token_env: ZAPIER_WEBHOOK_SECRET
+
+timeout_seconds: 20
+rate_limit:
+  requests_per_minute: 20
+retry:
+  max_attempts: 3
+  backoff_seconds: 2.0
+  retry_on: ["timeout", "503"]
+
+confirmation:
+  channel: chat
+  timeout_seconds: 60
+
+# Lista bianca degli zap/webhook che Universe può invocare.
+actions:
+  notify:
+    method: POST
+    path: ""
+    risk: low
+    body_from_params: true
+    description: Notifica interna (email/Slack già configurati nello Zap). Non pubblica all'esterno.
+  send:
+    method: POST
+    path: ""
+    risk: high
+    requires_confirmation: true
+    body_from_params: true
+    sensitive_params: ["message", "to", "body"]
+    description: Invia un messaggio verso terzi tramite Zap. Conferma obbligatoria.
+  publish:
+    method: POST
+    path: ""
+    risk: high
+    requires_confirmation: true
+    body_from_params: true
+    description: Pubblica un contenuto su un canale collegato a Zapier.
+  create_row:
+    method: POST
+    path: ""
+    risk: medium
+    body_from_params: true
+    description: Aggiunge una riga a un foglio o database collegato.
+
+capabilities:
+  - action: notify
+    risk: low
+    description: Notifica interna.
+  - action: send
+    risk: high
+    requires_confirmation: true
+    sensitive_params: ["message", "to", "body"]
+    description: Messaggio verso terzi.
+  - action: publish
+    risk: high
+    requires_confirmation: true
+    description: Pubblicazione su un canale collegato.
+  - action: create_row
+    risk: medium
+    description: Inserimento riga in un foglio/database.
