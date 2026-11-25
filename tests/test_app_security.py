@@ -45,7 +45,9 @@ def test_health_200_no_auth_no_secrets(tmp_path):
         r = c.get("/health")
     assert r.status_code == 200
     body = r.json()
-    assert body == {"ok": True}
+    assert body["ok"] is True
+    assert set(body) <= {"ok", "version", "commit", "started_at", "uptime_s"}
+    assert isinstance(body["uptime_s"], int) and body["uptime_s"] >= 0
     for key in SENSITIVE_HEALTH_KEYS:
         assert key not in body
     assert "token" not in r.text.lower() or "token" not in body
@@ -232,3 +234,17 @@ def test_startup_requires_tokens(tmp_path):
     with pytest.raises(RuntimeError):
         with TestClient(app):
             pass
+
+
+def test_health_payload_uptime_and_commit(monkeypatch):
+    from datetime import datetime, timezone
+    from universe.app import health_payload
+    start = datetime(2026, 11, 24, 5, 0, tzinfo=timezone.utc)
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "743ba947eaa92c3ecd55928573919eea48b4ed78")
+    b = health_payload(100.0, start, now_mono=190.9)
+    assert b == {"ok": True, "version": "0.2.0", "commit": "743ba94",
+                 "started_at": "2026-11-24T05:00:00+00:00", "uptime_s": 90}
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "not-a-hash; rm -rf")
+    assert "commit" not in health_payload(0.0, start, now_mono=1.0)
+    monkeypatch.delenv("RENDER_GIT_COMMIT")
+    assert "commit" not in health_payload(0.0, start, now_mono=1.0)

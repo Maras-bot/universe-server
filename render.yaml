@@ -1,5 +1,5 @@
-# Blueprint Render per Universe. I token NON stanno in questo file:
-# vanno impostati come variabili del servizio (UNIVERSE_BOT_TOKENS, UNIVERSE_PHONE_TOKEN).
+# Blueprint Render per Universe + Relay Phone Control. I token NON stanno in questo file:
+# vanno impostati come variabili del servizio (UNIVERSE_BOT_TOKENS, UNIVERSE_PHONE_TOKEN, RELAY_TOKEN).
 #
 # Render Free: l'istanza va in sleep dopo 15 minuti senza traffico in ingresso
 # (HTTP o messaggi WebSocket). Il telefono deve inviare {"type":"ping"}
@@ -37,4 +37,6 @@ services:
       - key: UNIVERSE_BOT_TOKENS
         sync: false
       - key: UNIVERSE_PHONE_TOKEN
+        sync: false
+      - key: RELAY_TOKEN
         sync: false
